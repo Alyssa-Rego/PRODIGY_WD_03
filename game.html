@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+        video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 200%;
+            min-height: 200%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            background-size: cover;
+        }
+        #game {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            cursor: pointer;
+        }
+        .cell.X {
+            color: rgb(5, 28, 157);
+        }
+        .cell.O {
+            color: rgb(225, 0, 131);
+        }
+        #leaderboard {
+            margin-top: 10px;
+            font-size: 1.5em;
+            text-align: left; 
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        #leaderboard h2 {
+            margin-bottom: 5px; 
+        #leaderboard p {
+            margin: 0; 
+        }
+        .playerXScore {
+            color:  rgb(5, 28, 157); 
+        }
+        .playerOScore {
+            color:rgb(225, 0, 131); 
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: rgb(181, 115, 170);
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: rgba(88, 0, 176, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop>
+        <source src="ink_bg.mp4" type="video/mp4">
+    </video>
+    <div id="leaderboard">
+        <h3>Leaderboard:-</h3>
+        <p>Player X's Score: <span id="playerXWins" class="playerXScore">0</span></p>
+        <br>
+        <p>Player O's Score: <span id="playerOWins" class="playerOScore">0</span></p>
+    </div>
+    
+    <div id="game-container" style="text-align: center;">
+        <h1>- Tic Tac Toe -</h1>
+        <br>
+        <div id="game">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+    </div>
+    
+    <div id="status"></div>
+    <br><br><br>
+    <button onclick="resetGame()">Replay</button>
+    <button onclick="goBackToMenu()">Go Back to Menu</button>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusDiv = document.getElementById('status');
+        const playerXWinsSpan = document.getElementById('playerXWins');
+        const playerOWinsSpan = document.getElementById('playerOWins');
+        let currentPlayer = 'X';
+        let gameState = Array(9).fill(null);
+        let gameActive = true;
+        let isPvP = true; 
+        let playerXWins = 0;
+        let playerOWins = 0;
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function handleCellClick(event) {
+            const cell = event.target;
+            const cellIndex = parseInt(cell.getAttribute('data-index'));
+
+            if (gameState[cellIndex] !== null || !gameActive) {
+                return;
+            }
+
+            gameState[cellIndex] = currentPlayer;
+            cell.textContent = currentPlayer;
+            cell.classList.add(currentPlayer);
+
+            if (checkWin()) {
+                statusDiv.textContent = `Player ${currentPlayer} wins!`;
+                gameActive = false;
+                updateLeaderboard();
+            } else if (gameState.every(cell => cell !== null)) {
+                statusDiv.textContent = `It's a draw!`;
+                gameActive = false;
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+                if (!isPvP && currentPlayer === 'O') {
+                    setTimeout(aiMove, 500);
+                }
+            }
+        }
+
+        function aiMove() {
+            let availableCells = gameState.map((val, index) => val === null ? index : null).filter(val => val !== null);
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === 'O' && gameState[b] === 'O' && gameState[c] === null) {
+                    gameState[c] = 'O';
+                    cells[c].textContent = 'O';
+                    cells[c].classList.add('O');
+                    updateStatus();
+                    return;
+                } else if (gameState[a] === 'O' && gameState[c] === 'O' && gameState[b] === null) {
+                    gameState[b] = 'O';
+                    cells[b].textContent = 'O';
+                    cells[b].classList.add('O');
+                    updateStatus();
+                    return;
+                } else if (gameState[b] === 'O' && gameState[c] === 'O' && gameState[a] === null) {
+                    gameState[a] = 'O';
+                    cells[a].textContent = 'O';
+                    cells[a].classList.add('O');
+                    updateStatus();
+                    return;
+                }
+            }
+
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (gameState[a] === 'X' && gameState[b] === 'X' && gameState[c] === null) {
+                    gameState[c] = 'O';
+                    cells[c].textContent = 'O';
+                    cells[c].classList.add('O');
+                    updateStatus();
+                    return;
+                } else if (gameState[a] === 'X' && gameState[c] === 'X' && gameState[b] === null) {
+                    gameState[b] = 'O';
+                    cells[b].textContent = 'O';
+                    cells[b].classList.add('O');
+                    updateStatus();
+                    return;
+                } else if (gameState[b] === 'X' && gameState[c] === 'X' && gameState[a] === null) {
+                    gameState[a] = 'O';
+                    cells[a].textContent = 'O';
+                    cells[a].classList.add('O');
+                    updateStatus();
+                    return;
+                }
+            }
+
+            let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+            gameState[randomCell] = 'O';
+            cells[randomCell].textContent = 'O';
+            cells[randomCell].classList.add('O');
+
+            updateStatus();
+        }
+
+        function updateStatus() {
+            if (checkWin()) {
+                statusDiv.textContent = `Player ${currentPlayer} wins!`;
+                gameActive = false;
+                updateLeaderboard();
+            } else if (gameState.every(cell => cell !== null)) {
+                statusDiv.textContent = `It's a draw!`;
+                gameActive = false;
+            } else {
+                currentPlayer = 'X';
+                statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+            }
+        }
+
+        function checkWin() {
+            return winningConditions.some(condition => {
+                const [a, b, c] = condition;
+                return gameState[a] === currentPlayer && gameState[b] === currentPlayer && gameState[c] === currentPlayer;
+            });
+        }
+
+        function updateLeaderboard() {
+            if (currentPlayer === 'X') {
+                playerXWins++;
+                playerXWinsSpan.textContent = playerXWins;
+            } else {
+                playerOWins++;
+                playerOWinsSpan.textContent = playerOWins;
+            }
+        }
+
+        function startGame() {
+            let mode = localStorage.getItem('gameMode');
+            isPvP = (mode === 'pvp');
+            resetGame();
+            statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        function resetGame() {
+            gameState = Array(9).fill(null);
+            gameActive = true;
+            currentPlayer = 'X';
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('X', 'O');
+            });
+            statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        function goBackToMenu() {
+            window.location.href = 'index.html';
+        }
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        startGame();
+    </script>
+</body>
+</html>
+

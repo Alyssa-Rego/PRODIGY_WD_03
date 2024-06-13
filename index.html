@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Mode Selection Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+        video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 200%;
+            min-height: 200%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            transform: translate(-50%, -50%);
+            background-size: cover;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: rgba(84, 2, 183, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop>
+        <source src="ink_bg.mp4" type="video/mp4">
+    </video>
+    <h1>Welcome to Tic Tac Toe!</h1>
+    <br><br>
+    <h2>Select Game Mode</h2>
+    <button onclick="setGameMode('pvp')">Player vs Player</button>
+    <button onclick="setGameMode('ai')">Player vs AI</button>
+
+    <script>
+        function setGameMode(mode) {
+            localStorage.setItem('gameMode', mode);
+            window.location.href = 'game.html';
+        }
+    </script>
+</body>
+</html>
